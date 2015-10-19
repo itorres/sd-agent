@@ -181,7 +181,7 @@ class checks:
 
             try:
 
-                if apacheStatus['BusyWorkers'] and apacheStatus['IdleWorkers']:
+                if 'BusyWorkers' in apacheStatus and 'IdleWorkers' in apacheStatus:
                     apacheStatusReturn['busyWorkers'] = apacheStatus['BusyWorkers']
                     apacheStatusReturn['idleWorkers'] = apacheStatus['IdleWorkers']
                 else:
