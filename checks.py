@@ -180,7 +180,6 @@ class checks:
                 self.mainLogger.error('getApacheStatus: KeyError - Total Accesses not present in mod_status output. Is ExtendedStatus enabled?')
 
             try:
-
                 if 'BusyWorkers' in apacheStatus and 'IdleWorkers' in apacheStatus:
                     apacheStatusReturn['busyWorkers'] = apacheStatus['BusyWorkers']
                     apacheStatusReturn['idleWorkers'] = apacheStatus['IdleWorkers']
