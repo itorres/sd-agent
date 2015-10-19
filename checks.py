@@ -158,7 +158,7 @@ class checks:
             apacheStatusReturn = {}
 
             try:
-                if apacheStatus['Total Accesses']:
+                if 'Total Accesses' in apacheStatus:
                     self.mainLogger.debug('getApacheStatus: processing total accesses')
                     totalAccesses = float(apacheStatus['Total Accesses'])
 
