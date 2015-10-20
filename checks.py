@@ -25,6 +25,7 @@ import sys
 import urllib
 import urllib2
 import socket
+import json
 
 try:
     from hashlib import md5
@@ -115,6 +116,7 @@ class checks:
                 req = urllib2.Request(self.agentConfig['apacheStatusUrl'], None, headers)
                 request = urllib2.urlopen(req)
                 response = request.read()
+                self.mainLogger.debug('getApacheStatus: response -> %s', response)
 
             except urllib2.HTTPError, e:
                 self.mainLogger.error('Unable to get Apache status - HTTPError = %s', e)
@@ -152,7 +154,7 @@ class checks:
 
                 except IndexError:
                     break
-
+            self.mainLogger.debug('getApacheStatus: apacheStatus raw %s', json.dumps(apacheStatus))
             self.mainLogger.debug('getApacheStatus: parsed')
 
             apacheStatusReturn = {}
