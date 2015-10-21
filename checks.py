@@ -153,7 +153,7 @@ class checks:
                     apacheStatus[str(values[0])] = values[1]
 
                 except IndexError:
-                    break
+                    continue
             self.mainLogger.debug('getApacheStatus: apacheStatus raw %s', json.dumps(apacheStatus))
             self.mainLogger.debug('getApacheStatus: parsed')
 
