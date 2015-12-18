@@ -20,6 +20,7 @@ class PHPFPMCheck(AgentCheck):
         'idle processes': 'php_fpm.processes.idle',
         'active processes': 'php_fpm.processes.active',
         'total processes': 'php_fpm.processes.total',
+        'uptime': 'php_fpm.uptime',
     }
 
     MONOTONIC_COUNTS = {
