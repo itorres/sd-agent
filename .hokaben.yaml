@@ -1,0 +1,198 @@
+ubuntu:
+  precise:
+    dockerfile: |
+      FROM ubuntu:precise
+      WORKDIR /root
+      RUN apt-get update && apt-get install -y pbuilder debootstrap devscripts ubuntu-dev-tools && mkdir /root/agent-pkg-debian
+      RUN echo 'for arch in amd64 i386; do pbuilder-dist precise $arch create; done' > /root/pbuilder-bootstrap.sh
+    entrypoint: |
+      #!/bin/sh
+      dpkg-source -b build/src/*
+
+      for arch in amd64 i386; do
+        pbuilder-dist precise $arch build \
+        --buildresult /root/build/result/precise/$arch *.dsc
+        done
+centos:
+  rhel5_i386:
+    dockerfile: |
+      FROM itorres/centos-i386:5
+      RUN  linux32 yum install -y epel-release && linux32 yum -y update && linux32 yum -y install rpm-build redhat-rpm-config make gcc python26 python26-devel wget curl libyaml-devel curl-devel postgresql-devel
+
+      RUN ( grep -q :20: /etc/group || groupadd -g 20 osx_staff ) && \
+          ( grep -q :501: /etc/passwd || useradd -u 501 -g 20 osx_user ) && \
+          ( grep -q :1000: /etc/group || groupadd -g 1000 ubuntu_group ) && \
+          ( grep -q :1000: /etc/passwd || useradd  -u 1000 -g 1000 ubuntu_user )
+    entrypoint: |
+      #!/bin/bash -xe
+      cat > $HOME/.rpmmacros << EOF_MACROS
+      %_topdir /root/centos
+      %_tmppath %{_topdir}/tmp
+      %_signature gpg
+      %_gpg_name hello@serverdensity.com
+      %_gpg_path ~/.gnupg
+      EOF_MACROS
+
+      mkdir /root/centos
+      cd /root/centos
+      for dir in SOURCES BUILD RPMS SRPMS; do
+      [ -d $dir ] || mkdir $dir
+      done
+      cd /root/build/src
+      sd_agent_version=$(awk -F'"' '/^AGENT_VERSION/ {print $2}' sd-agent/config.py)
+      tar -czf /root/centos/SOURCES/sd-agent-${sd_agent_version}.tar.gz sd-agent
+      cp -a sd-agent/packaging/centos/{SPECS,inc,description} /root/centos
+      cd /root/centos
+      chown -R `id -u`:`id -g` /root/centos
+      function build {
+      rpmdir=/root/build/result/$1
+      rpmbuild -ba SPECS/sd-agent-$1.spec && \
+      (test -d $rpmdir || mkdir -p $rpmdir) && cp -a /root/centos/RPMS/* $rpmdir
+      }
+      build "el5"
+  rhel6_i386:
+    dockerfile: |
+      FROM itorres/centos-i386:6
+      RUN linux32 yum -y install rpm-build redhat-rpm-config make gcc python-devel wget curl libyaml-devel curl-devel postgresql-devel tar
+
+      RUN ( grep -q :20: /etc/group || groupadd -g 20 osx_staff ) && \
+          ( grep -q :501: /etc/passwd || useradd -u 501 -g 20 osx_user ) && \
+          ( grep -q :1000: /etc/group || groupadd -g 1000 ubuntu_group ) && \
+          ( grep -q :1000: /etc/passwd || useradd  -u 1000 -g 1000 ubuntu_user )
+    entrypoint: |
+      #!/bin/bash -xe
+      cat > $HOME/.rpmmacros << EOF_MACROS
+      %_topdir /root/centos
+      %_tmppath %{_topdir}/tmp
+      %_signature gpg
+      %_gpg_name hello@serverdensity.com
+      %_gpg_path ~/.gnupg
+      EOF_MACROS
+
+      mkdir /root/centos
+      cd /root/centos
+      for dir in SOURCES BUILD RPMS SRPMS; do
+          [ -d $dir ] || mkdir $dir
+      done
+      cd /root/build/src
+      sd_agent_version=$(awk -F'"' '/^AGENT_VERSION/ {print $2}' sd-agent/config.py)
+      tar -czf /root/centos/SOURCES/sd-agent-${sd_agent_version}.tar.gz sd-agent
+      cp -a sd-agent/packaging/centos/{SPECS,inc,description} /root/centos
+      cd /root/centos
+      chown -R `id -u`:`id -g` /root/centos
+      function build {
+          rpmdir=/root/build/result/$1
+          rpmbuild -ba SPECS/sd-agent-$1.spec && \
+          (test -d $rpmdir || mkdir -p $rpmdir) && cp -a /root/centos/RPMS/* $rpmdir
+      }
+      build "el6"
+  rhel5:
+    dockerfile: |
+      FROM centos:5
+      RUN  yum install -y epel-release && yum -y update && yum -y install rpm-build redhat-rpm-config make gcc python26 python26-devel wget curl libyaml-devel curl-devel postgresql-devel
+
+      RUN ( grep -q :20: /etc/group || groupadd -g 20 osx_staff ) && \
+          ( grep -q :501: /etc/passwd || useradd -u 501 -g 20 osx_user ) && \
+          ( grep -q :1000: /etc/group || groupadd -g 1000 ubuntu_group ) && \
+          ( grep -q :1000: /etc/passwd || useradd  -u 1000 -g 1000 ubuntu_user )
+    entrypoint: |
+      #!/bin/bash -xe
+      cat > $HOME/.rpmmacros << EOF_MACROS
+      %_topdir /root/centos
+      %_tmppath %{_topdir}/tmp
+      %_signature gpg
+      %_gpg_name hello@serverdensity.com
+      %_gpg_path ~/.gnupg
+      EOF_MACROS
+
+      mkdir /root/centos
+      cd /root/centos
+      for dir in SOURCES BUILD RPMS SRPMS; do
+          [ -d $dir ] || mkdir $dir
+      done
+      cd /root/build/src
+      sd_agent_version=$(awk -F'"' '/^AGENT_VERSION/ {print $2}' sd-agent/config.py)
+      tar -czf /root/centos/SOURCES/sd-agent-${sd_agent_version}.tar.gz sd-agent
+      cp -a sd-agent/packaging/centos/{SPECS,inc,description} /root/centos
+      cd /root/centos
+      chown -R `id -u`:`id -g` /root/centos
+      function build {
+          rpmdir=/root/build/result/$1
+          rpmbuild -ba SPECS/sd-agent-$1.spec && \
+          (test -d $rpmdir || mkdir -p $rpmdir) && cp -a /root/centos/RPMS/* $rpmdir
+      }
+      build "el5"
+
+  rhel6:
+    dockerfile: |
+      FROM centos:6
+      RUN yum -y install rpm-build redhat-rpm-config make gcc  python-devel wget curl libyaml-devel curl-devel postgresql-devel tar
+
+      RUN ( grep -q :20: /etc/group || groupadd -g 20 osx_staff ) && \
+          ( grep -q :501: /etc/passwd || useradd -u 501 -g 20 osx_user ) && \
+          ( grep -q :1000: /etc/group || groupadd -g 1000 ubuntu_group ) && \
+          ( grep -q :1000: /etc/passwd || useradd  -u 1000 -g 1000 ubuntu_user )
+    entrypoint: |
+      #!/bin/bash -xe
+      cat > $HOME/.rpmmacros << EOF_MACROS
+      %_topdir /root/centos
+      %_tmppath %{_topdir}/tmp
+      %_signature gpg
+      %_gpg_name hello@serverdensity.com
+      %_gpg_path ~/.gnupg
+      EOF_MACROS
+
+      mkdir /root/centos
+      cd /root/centos
+      for dir in SOURCES BUILD RPMS SRPMS; do
+          [ -d $dir ] || mkdir $dir
+      done
+      cd /root/build/src
+      sd_agent_version=$(awk -F'"' '/^AGENT_VERSION/ {print $2}' sd-agent/config.py)
+      tar -czf /root/centos/SOURCES/sd-agent-${sd_agent_version}.tar.gz sd-agent
+      cp -a sd-agent/packaging/centos/{SPECS,inc,description} /root/centos
+      cd /root/centos
+      chown -R `id -u`:`id -g` /root/centos
+      function build {
+          rpmdir=/root/build/result/$1
+          rpmbuild -ba SPECS/sd-agent-$1.spec && \
+          (test -d $rpmdir || mkdir -p $rpmdir) && cp -a /root/centos/RPMS/* $rpmdir
+      }
+      build "el6"
+  rhel7:
+    dockerfile: |
+      FROM centos:7
+      RUN yum -y install rpm-build redhat-rpm-config make gcc  python-devel wget curl libyaml-devel curl-devel postgresql-devel tar
+
+      RUN ( grep -q :20: /etc/group || groupadd -g 20 osx_staff ) && \
+          ( grep -q :501: /etc/passwd || useradd -u 501 -g 20 osx_user ) && \
+          ( grep -q :1000: /etc/group || groupadd -g 1000 ubuntu_group ) && \
+          ( grep -q :1000: /etc/passwd || useradd  -u 1000 -g 1000 ubuntu_user )
+    entrypoint: |
+      #!/bin/bash -xe
+      cat > $HOME/.rpmmacros << EOF_MACROS
+      %_topdir /root/centos
+      %_tmppath %{_topdir}/tmp
+      %_signature gpg
+      %_gpg_name hello@serverdensity.com
+      %_gpg_path ~/.gnupg
+      EOF_MACROS
+
+      mkdir /root/centos
+      cd /root/centos
+      for dir in SOURCES BUILD RPMS SRPMS; do
+          [ -d $dir ] || mkdir $dir
+      done
+      cd /root/build/src
+      sd_agent_version=$(awk -F'"' '/^AGENT_VERSION/ {print $2}' sd-agent/config.py)
+      tar -czf /root/centos/SOURCES/sd-agent-${sd_agent_version}.tar.gz sd-agent
+      cp -a sd-agent/packaging/centos/{SPECS,inc,description} /root/centos
+      cd /root/centos
+      chown -R `id -u`:`id -g` /root/centos
+
+      function build {
+          rpmdir=/root/build/result/$1
+          rpmbuild -ba SPECS/sd-agent-$1.spec && \
+          (test -d $rpmdir || mkdir -p $rpmdir) && cp -a /root/centos/RPMS/* $rpmdir
+      }
+      build "el7"
